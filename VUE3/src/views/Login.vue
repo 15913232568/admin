@@ -24,6 +24,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { login } from '../apis/auth'
+import { STORAGE_KEYS } from '../config/env'
 
 const router = useRouter()
 const loginFormRef = ref()
@@ -52,26 +53,35 @@ const handleLogin = async () => {
     
     try {
       // 调用真实的后端登录接口
-      const response = await login({
+      const result = await login({
         username: loginForm.username,
         password: loginForm.password
       })
+      
+      console.log('登录成功，token已保存:', result.token)
+      
+      // 确保token已保存到localStorage
+      const savedToken = localStorage.getItem(STORAGE_KEYS.TOKEN)
+      console.log('验证token保存状态:', savedToken)
       
       // 登录成功，获取跳转路径
       const redirect = router.currentRoute.value.query.redirect as string
       const targetPath = redirect || '/customer/list'
       
-      // 跳转到目标页面
-      router.push(targetPath)
-      ElMessage.success('登录成功')
+      // 添加短暂延迟，确保token保存完成
+      setTimeout(() => {
+        // 跳转到目标页面
+        router.push(targetPath)
+        ElMessage.success('登录成功')
+      }, 100)
       
     } catch (error: any) {
       // 登录失败，显示错误信息
       console.error('登录请求失败:', error)
       ElMessage.error(error.message || '登录失败，请检查网络连接')
+      loading.value = false
     }
     
-    loading.value = false
   } catch (error) {
     console.error('表单验证失败:', error)
     loading.value = false

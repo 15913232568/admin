@@ -17,7 +17,7 @@ class Role(
     @ManyToMany(mappedBy = "roles")
     var users: MutableList<User> = mutableListOf(),
     
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "role_permissions",
         joinColumns = [JoinColumn(name = "role_id")],

@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
+import com.example.wealth.utils.JwtUtil
 
 /**
  * JWT Token 验证过滤器（每次请求执行一次）

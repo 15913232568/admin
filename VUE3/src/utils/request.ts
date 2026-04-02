@@ -31,6 +31,7 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response) => {
     // 2xx 范围内的状态码都会触发该函数
+    // 直接返回response.data，让调用方处理具体的数据结构
     return response.data
   },
   (error) => {
@@ -42,11 +43,12 @@ request.interceptors.response.use(
       const { status, data } = error.response
       
       if (status === 401) {
-        // 未授权，清除token并跳转到登录页
+        // 未授权，清除token但不自动跳转，让调用方处理
         localStorage.removeItem(STORAGE_KEYS.TOKEN)
         localStorage.removeItem(STORAGE_KEYS.USERNAME)
         localStorage.removeItem(STORAGE_KEYS.ROLE)
-        window.location.href = '/login'
+        console.warn('认证失败，token已清除，请重新登录')
+        // 不再自动跳转，让调用方处理认证失败
       }
       
       return Promise.reject({

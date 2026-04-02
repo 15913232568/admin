@@ -1,4 +1,4 @@
-package com.example.wealth.config
+package com.example.wealth.utils
 
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts

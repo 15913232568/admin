@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import CustomerEditForm from '../../components/CustomerEditForm.vue'
@@ -52,53 +52,61 @@ import CustomerEditForm from '../../components/CustomerEditForm.vue'
 const router = useRouter()
 
 // 客户列表
-const customerList = ref<any[]>([
-  {
-    id: '3',
-    customerId: 'C003',
-    name: '王五',
-    contact: '13800138003',
-    source: '线上',
-    createTime: '2024-01-03 10:00:00',
-    owner: '张三',
-    submitter: '李四',
-    status: '待跟进',
-    intentProduct: '产品A',
-    intentLevel: '中',
-    budget: '10000',
-    expectedTime: '2024-02-01',
-    requirements: [
-      { id: '1', content: '需要定制化功能', createTime: '2024-01-03 11:00:00' }
-    ],
-    followLogs: [
-      { id: '1', content: '初次接触，客户表示有兴趣', creator: '张三', createTime: '2024-01-03 10:30:00' }
-    ]
-  },
-  {
-    id: '4',
-    customerId: 'C004',
-    name: '赵六',
-    contact: '13800138004',
-    source: '线下',
-    createTime: '2024-01-04 10:00:00',
-    owner: '王五',
-    submitter: '赵六',
-    status: '跟进中',
-    intentProduct: '产品B',
-    intentLevel: '高',
-    budget: '20000',
-    expectedTime: '2024-02-15',
-    requirements: [
-      { id: '2', content: '需要技术支持', createTime: '2024-01-04 11:00:00' }
-    ],
-    followLogs: [
-      { id: '2', content: '客户已参观公司，意向明确', creator: '王五', createTime: '2024-01-04 10:30:00' }
-    ]
-  }
-])
+const customerList = ref<any[]>([])
 
-// 编辑表单引用
-const editFormRef = ref<InstanceType<typeof CustomerEditForm>>()
+// 加载客户列表 - 公海客户页面使用静态数据
+const loadCustomerList = () => {
+  // 使用静态数据，不调用API
+  customerList.value = [
+    {
+      id: '3',
+      customerId: 'C003',
+      name: '王五',
+      contact: '13800138003',
+      source: '线上',
+      createTime: '2024-01-03 10:00:00',
+      owner: '张三',
+      submitter: '李四',
+      status: '待跟进',
+      intentProduct: '产品A',
+      intentLevel: '中',
+      budget: '10000',
+      expectedTime: '2026-02-01',
+      requirements: [
+        { id: '1', content: '需要定制化功能', createTime: '2024-01-03 11:00:00' }
+      ],
+      followLogs: [
+        { id: '1', content: '初次接触，客户表示有兴趣', creator: '张三', createTime: '2024-01-03 10:30:00' }
+      ]
+    },
+    {
+      id: '4',
+      customerId: 'C004',
+      name: '赵六',
+      contact: '13800138004',
+      source: '线下',
+      createTime: '2024-01-04 10:00:00',
+      owner: '王五',
+      submitter: '赵六',
+      status: '跟进中',
+      intentProduct: '产品B',
+      intentLevel: '高',
+      budget: '20000',
+      expectedTime: '2026-02-15',
+      requirements: [
+        { id: '2', content: '需要技术支持', createTime: '2024-01-04 11:00:00' }
+      ],
+      followLogs: [
+        { id: '2', content: '客户已参观公司，意向明确', creator: '王五', createTime: '2024-01-04 10:30:00' }
+      ]
+    }
+  ]
+}
+
+// 组件挂载时加载数据
+onMounted(() => {
+  loadCustomerList()
+})
 
 // 显示编辑表单
 const showEditForm = ref(false)
@@ -178,47 +186,27 @@ const handleEdit = (row: any) => {
 
 // 处理保存
 const handleSave = (customerData: any) => {
-  // 查找是否已存在该客户
-  const index = customerList.value.findIndex(item => item.id === customerData.id)
-  
-  if (index !== -1) {
-    // 更新现有客户
-    customerList.value[index] = { ...customerData }
-  } else {
-    // 新增客户
-    customerList.value.push({
-      ...customerData,
-      createTime: new Date().toLocaleString()
-    })
-  }
+  // 使用静态数据，不调用API
+  console.log('保存客户数据:', customerData)
   
   ElMessage.success('保存成功')
   showEditForm.value = false
+  
+  // 重新加载客户列表
+  loadCustomerList()
 }
 
 // 处理提交
 const handleSubmit = (customerData: any) => {
-  // 查找是否已存在该客户
-  const index = customerList.value.findIndex(item => item.id === customerData.id)
-  
-  if (index !== -1) {
-    // 更新现有客户
-    customerList.value[index] = { 
-      ...customerData,
-      status: '已提交'
-    }
-  } else {
-    // 新增客户
-    customerList.value.push({
-      ...customerData,
-      status: '已提交',
-      createTime: new Date().toLocaleString()
-    })
-  }
+  // 使用静态数据，不调用API
+  console.log('提交客户数据:', customerData)
   
   isSubmitted.value = true
   ElMessage.success('提交成功')
   showEditForm.value = false
+  
+  // 重新加载客户列表
+  loadCustomerList()
 }
 
 // 处理取消编辑
@@ -264,10 +252,5 @@ const handleApprove = () => {
 .action-bar {
   margin-bottom: 20px;
   display: flex;
-  gap: 10px;
-}
-
-.el-table {
-  margin-top: 20px;
 }
 </style>

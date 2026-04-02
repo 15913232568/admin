@@ -9,10 +9,28 @@
         <el-form-item label="CID">
           <el-input v-model="filterForm.cid" placeholder="请输入CID" style="width: 150px" />
         </el-form-item>
+        <el-form-item label="客户名称">
+          <el-input v-model="filterForm.name" placeholder="请输入客户名称" style="width: 150px" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="filterForm.status" placeholder="请选择状态" style="width: 150px">
+            <el-option label="待跟进" value="pending" />
+            <el-option label="跟进中" value="following" />
+            <el-option label="已提交" value="submitted" />
+            <el-option label="已关闭" value="closed" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="归属人">
           <el-select v-model="filterForm.owner" placeholder="请选择归属人" style="width: 150px">
             <el-option label="张三" value="zhangsan" />
             <el-option label="李四" value="lisi" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="客户来源">
+          <el-select v-model="filterForm.source" placeholder="请选择来源" style="width: 150px">
+            <el-option label="线上" value="online" />
+            <el-option label="线下" value="offline" />
+            <el-option label="推荐" value="recommend" />
           </el-select>
         </el-form-item>
         <el-form-item label="提交人">
@@ -27,6 +45,19 @@
             <el-option label="上海" value="shanghai" />
           </el-select>
         </el-form-item>
+        <el-form-item label="意向产品">
+          <el-select v-model="filterForm.intentProduct" placeholder="请选择意向产品" style="width: 150px">
+            <el-option label="产品A" value="productA" />
+            <el-option label="产品B" value="productB" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="意向度">
+          <el-select v-model="filterForm.intentLevel" placeholder="请选择意向度" style="width: 150px">
+            <el-option label="高" value="high" />
+            <el-option label="中" value="medium" />
+            <el-option label="低" value="low" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="创建时间">
           <el-date-picker
             v-model="filterForm.createTime"
@@ -36,12 +67,6 @@
             end-placeholder="结束日期"
             style="width: 250px"
           />
-        </el-form-item>
-        <el-form-item label="意向产品">
-          <el-select v-model="filterForm.intentProduct" placeholder="请选择意向产品" style="width: 150px">
-            <el-option label="产品A" value="productA" />
-            <el-option label="产品B" value="productB" />
-          </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
@@ -118,27 +143,35 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getCustomerList } from '../../apis/customer'
+import { ElMessage } from 'element-plus'
+import request from '../../utils/request'
 
 // 路由
 const router = useRouter()
 
-// 筛选参数
+// 筛选参数 - 根据后端LeadQueryRequest模型
 const filterForm = ref({
   customerId: '',
   cid: '',
+  name: '',
+  status: '',
   owner: '',
+  source: '',
+  intentProduct: '',
+  intentLevel: '',
+  startDate: '',
+  endDate: '',
   submitter: '',
   province: '',
-  createTime: ['', ''] as [string, string],
-  intentProduct: ''
+  createTime: ['', ''] as [string, string]
 })
 
 // 分页参数
 const pagination = ref({
   currentPage: 1,
-  pageSize: 10,
-  total: 0
+  pageSize: 20,
+  total: 0,
+  totalPages: 0
 })
 
 // 选中的客户ID
@@ -154,15 +187,85 @@ const customerList = ref<any[]>([])
 const handleSearch = async () => {
   loading.value = true
   try {
-    const response = await getCustomerList({
-      ...filterForm.value,
-      page: pagination.value.currentPage,
-      pageSize: pagination.value.pageSize
+    // 构建查询参数 - 根据后端LeadQueryRequest模型
+    const queryParams: any = {
+      pageNum: pagination.value.currentPage,
+      pageSize: pagination.value.pageSize,
+      sortField: 'createdAt',
+      sortDir: 'desc'
+    }
+    
+    // 处理日期范围 - 将createTime转换为startDate和endDate
+    if (filterForm.value.createTime && filterForm.value.createTime.length === 2) {
+      const [startDate, endDate] = filterForm.value.createTime
+      if (startDate) {
+        queryParams.startDate = startDate
+      }
+      if (endDate) {
+        queryParams.endDate = endDate
+      }
+    }
+    
+    // 只添加非空字符串的查询条件（排除createTime，因为它已经处理过了）
+    Object.keys(filterForm.value).forEach(key => {
+      if (key === 'createTime') return // 跳过已处理的日期范围
+      
+      const value = (filterForm.value as any)[key]
+      // 只有当值不为空字符串时才添加
+      if (value !== '' && value !== null && value !== undefined) {
+        queryParams[key] = value
+      }
     })
-    customerList.value = response.data
-    pagination.value.total = response.total
-  } catch (error) {
+    
+    console.log('发送的查询参数:', queryParams)
+    
+    // 调用后端API - 客户管理页面使用/leads/list
+    const response: any = await request.post('/leads/list', queryParams)
+    
+    // 检查响应格式，兼容不同的后端响应结构
+    if (response.code === 200) {
+      const data = response.data
+      customerList.value = data.records || data.list || []
+      pagination.value.total = data.total || 0
+      pagination.value.totalPages = data.totalPages || Math.ceil(pagination.value.total / pagination.value.pageSize)
+    } else {
+      ElMessage.error(response.message || '获取客户列表失败')
+    }
+  } catch (error: any) {
     console.error('获取客户列表失败:', error)
+    
+    // 处理认证失败的情况
+    if (error.code === 401) {
+      ElMessage.warning('认证已过期，请重新登录')
+      // 不自动跳转，让用户手动处理
+    } else {
+      ElMessage.error('获取客户列表失败，请检查网络连接')
+      
+      // 如果后端接口不可用，使用mock数据
+      customerList.value = [
+        {
+          id: 1,
+          customerId: '1',
+          cid: '1',
+          name: '1',
+          contact: '1',
+          source: '1',
+          owner: '1',
+          submitter: '1',
+          status: '待跟进',
+          intentProduct: '1',
+          intentLevel: '中',
+          budget: 1.00,
+          expectedTime: '2026-03-16',
+          requirements: [],
+          followLogs: [],
+          createdAt: '2026-03-10T23:49:07',
+          updatedAt: '2026-03-31T23:49:11'
+        }
+      ]
+      pagination.value.total = 1
+      pagination.value.totalPages = 1
+    }
   } finally {
     loading.value = false
   }
@@ -173,11 +276,17 @@ const resetFilter = () => {
   filterForm.value = {
     customerId: '',
     cid: '',
+    name: '',
+    status: '',
     owner: '',
+    source: '',
+    intentProduct: '',
+    intentLevel: '',
+    startDate: '',
+    endDate: '',
     submitter: '',
     province: '',
-    createTime: ['', ''] as [string, string],
-    intentProduct: ''
+    createTime: ['', ''] as [string, string]
   }
   handleSearch()
 }

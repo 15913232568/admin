@@ -58,6 +58,13 @@ data class ResponseDTO<T>(
         }
         
         /**
+         * 成功响应（无数据）
+         */
+        fun success(): ResponseDTO<Void> {
+            return ResponseDTO(200, "success", null)
+        }
+        
+        /**
          * 错误响应
          */
         fun <T> error(message: String): ResponseDTO<T> {

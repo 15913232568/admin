@@ -1,6 +1,6 @@
 package com.example.wealth.controller
 
-import com.example.wealth.config.JwtUtil
+import com.example.wealth.utils.JwtUtil
 import com.example.wealth.repository.UserRepository
 import com.example.wealth.service.impl.UserDetailsServiceImpl
 import org.springframework.security.authentication.AuthenticationManager

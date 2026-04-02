@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { isLoggedIn } from '../apis/auth'
-import { STORAGE_KEYS } from '../config/env'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -77,19 +76,35 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
+  console.log('路由守卫检查:', to.path, 'requiresAuth:', to.meta.requiresAuth)
+  
   // 定义不需要认证的白名单路由
-  const publicRoutes = ['/login']
+  // const publicRoutes = ['/login']
+  
+  // 如果访问的是登录页，直接放行
+  if (to.path === '/login') {
+    // 如果已登录，重定向到首页
+    if (isLoggedIn()) {
+      next('/')
+    } else {
+      next()
+    }
+    return
+  }
   
   // 检查是否需要认证
-  if (to.meta.requiresAuth && !publicRoutes.includes(to.path)) {
+  if (to.meta.requiresAuth) {
     // 检查是否已登录
-    if (isLoggedIn()) {
+    const loggedIn = isLoggedIn()
+    console.log('认证检查结果:', loggedIn)
+    
+    if (loggedIn) {
       next()
     } else {
-      // 未登录，保存目标路由并跳转到登录页
-      const redirectPath = to.fullPath === '/' ? '/customer/list' : to.fullPath
-      next(`/login?redirect=${encodeURIComponent(redirectPath)}`)
+      console.log('未登录，跳转到登录页')
+      // 未登录，跳转到登录页
+      next('/login')
     }
   } else {
     next()

@@ -23,7 +23,7 @@ export interface LoginErrorResponse {
 export const login = async (params: LoginParams): Promise<LoginSuccessResponse> => {
   try {
     // 发送登录请求
-    const response = await request.post('/auth/login', params)
+    const response: any = await request.post('/auth/login', params)
     
     // 登录成功，存储token到本地
     if (response.token) {
@@ -32,7 +32,10 @@ export const login = async (params: LoginParams): Promise<LoginSuccessResponse> 
       // 可以根据实际需求存储用户角色等信息
     }
     
-    return response
+    return {
+      token: response.token,
+      type: response.type || 'Bearer'
+    }
   } catch (error: any) {
     console.error('登录请求失败:', error)
     
@@ -55,6 +58,9 @@ export const logout = () => {
 // 检查是否已登录
 export const isLoggedIn = (): boolean => {
   const token = localStorage.getItem(STORAGE_KEYS.TOKEN)
+  console.log('认证检查 - Token:', token)
+  console.log('认证检查 - Token存在:', !!token)
+  console.log('认证检查 - Token有效:', token && token !== 'null' && token !== 'undefined')
   return !!token && token !== 'null' && token !== 'undefined'
 }
 
