@@ -17,21 +17,6 @@ export type CustomerStatus = '正常' | '超期' | '已释放'
 // 客户意向度
 export type IntentLevel = '高' | '中' | '低'
 
-// 客户需求
-export interface CustomerRequirement {
-  id: string
-  content: string
-  createTime: string
-}
-
-// 跟进日志
-export interface FollowLog {
-  id: string
-  content: string
-  creator: string
-  createTime: string
-}
-
 // 客户信息
 export interface Customer {
   id: string
@@ -49,8 +34,8 @@ export interface Customer {
   intentLevel: IntentLevel
   budget?: string
   expectedTime?: string
-  requirements: CustomerRequirement[]
-  followLogs: FollowLog[]
+  requirements: string[]  // 需求信息改为字符串数组
+  followLogs: string[]    // 跟进日志改为字符串数组
 }
 
 // 客户列表响应

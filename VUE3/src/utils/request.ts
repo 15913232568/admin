@@ -43,12 +43,13 @@ request.interceptors.response.use(
       const { status, data } = error.response
       
       if (status === 401) {
-        // 未授权，清除token但不自动跳转，让调用方处理
+        // 未授权，清除token并自动跳转到登录页面
         localStorage.removeItem(STORAGE_KEYS.TOKEN)
         localStorage.removeItem(STORAGE_KEYS.USERNAME)
         localStorage.removeItem(STORAGE_KEYS.ROLE)
-        console.warn('认证失败，token已清除，请重新登录')
-        // 不再自动跳转，让调用方处理认证失败
+        console.warn('认证失败，token已清除，将跳转到登录页面')
+        // 自动跳转到登录页面
+        window.location.href = '/login'
       }
       
       return Promise.reject({

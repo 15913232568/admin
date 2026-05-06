@@ -101,7 +101,7 @@
           <el-tag :type="getIntentLevelType(scope.row.intentLevel)">{{ scope.row.intentLevel }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="需求信息" label="需求信息" width="200">
+      <el-table-column prop="requirements" label="需求信息" width="200">
         <template #default="scope">
           <span>{{ scope.row.requirements?.length || 0 }} 条需求</span>
         </template>
@@ -109,7 +109,11 @@
       <el-table-column prop="source" label="客户来源" width="120" />
       <el-table-column prop="owner" label="归属人" width="100" />
       <el-table-column prop="submitter" label="提交人" width="100" />
-      <el-table-column prop="createTime" label="创建时间" width="180" />
+      <el-table-column prop="createdAt" label="创建时间" width="180">
+        <template #default="scope">
+          {{ formatDate(scope.row.createdAt) }}
+        </template>
+      </el-table-column>
       <el-table-column prop="status" label="状态" width="100">
         <template #default="scope">
           <span v-if="scope.row.status === 'overdue'" style="color: red">超期</span>
@@ -241,30 +245,10 @@ const handleSearch = async () => {
     } else {
       ElMessage.error('获取客户列表失败，请检查网络连接')
       
-      // 如果后端接口不可用，使用mock数据
-      customerList.value = [
-        {
-          id: 1,
-          customerId: '1',
-          cid: '1',
-          name: '1',
-          contact: '1',
-          source: '1',
-          owner: '1',
-          submitter: '1',
-          status: '待跟进',
-          intentProduct: '1',
-          intentLevel: '中',
-          budget: 1.00,
-          expectedTime: '2026-03-16',
-          requirements: [],
-          followLogs: [],
-          createdAt: '2026-03-10T23:49:07',
-          updatedAt: '2026-03-31T23:49:11'
-        }
-      ]
-      pagination.value.total = 1
-      pagination.value.totalPages = 1
+      // 如果后端接口不可用，将列表设为空数组，不显示任何数据
+      customerList.value = []
+      pagination.value.total = 0
+      pagination.value.totalPages = 0
     }
   } finally {
     loading.value = false
@@ -349,6 +333,20 @@ const getIntentLevelType = (level: string) => {
     default:
       return 'info'
   }
+}
+
+// 格式化日期
+const formatDate = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  }).replace(/\//g, '-')
 }
 
 // 初始化

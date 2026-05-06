@@ -6,6 +6,7 @@ import com.example.wealth.service.LeadService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
 
@@ -89,7 +90,7 @@ class LeadController(private val leadService: LeadService) {
     @PostMapping("/{id}/requirements")
     fun addRequirement(
         @PathVariable id: Long,
-        @RequestBody requirement: Lead.Requirement
+        @RequestBody requirement: String
     ): ResponseEntity<ResponseDTO<LeadResponse>> {
         val lead = leadService.addRequirement(id, requirement)
         return ResponseEntity.ok(ResponseDTO.success(lead))
@@ -101,9 +102,20 @@ class LeadController(private val leadService: LeadService) {
     @PostMapping("/{id}/follow-logs")
     fun addFollowLog(
         @PathVariable id: Long,
-        @RequestBody followLog: Lead.FollowLog
+        @RequestBody followLog: String
     ): ResponseEntity<ResponseDTO<LeadResponse>> {
         val lead = leadService.addFollowLog(id, followLog)
+        return ResponseEntity.ok(ResponseDTO.success(lead))
+    }
+    
+    /**
+     * 将当前登录用户设置为潜在客户的负责人
+     */
+    @PutMapping("/{id}/owner")
+    fun assignOwner(@PathVariable id: Long): ResponseEntity<ResponseDTO<LeadResponse>> {
+        val authentication = SecurityContextHolder.getContext().authentication
+        val username = authentication.name
+        val lead = leadService.assignOwner(id, username)
         return ResponseEntity.ok(ResponseDTO.success(lead))
     }
     

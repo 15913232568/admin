@@ -26,7 +26,7 @@
         <el-descriptions-item label="客户名称">{{ customer?.name }}</el-descriptions-item>
         <el-descriptions-item label="联系方式">{{ customer?.contact }}</el-descriptions-item>
         <el-descriptions-item label="渠道来源">{{ customer?.source }}</el-descriptions-item>
-        <el-descriptions-item label="创建时间">{{ customer?.createTime }}</el-descriptions-item>
+        <el-descriptions-item label="创建时间">{{ customer?.createdAt ? formatDate(customer?.createdAt) : '' }}</el-descriptions-item>
         <el-descriptions-item label="归属人">{{ customer?.owner }}</el-descriptions-item>
         <el-descriptions-item label="提交人">{{ customer?.submitter }}</el-descriptions-item>
         <el-descriptions-item label="状态">{{ customer?.status }}</el-descriptions-item>
@@ -47,10 +47,8 @@
 
     <!-- 需求信息 -->
     <el-card class="info-card" header="需求信息" style="margin-top: 20px">
-      <el-table :data="customer?.requirements || []" style="width: 100%">
-        <el-table-column prop="id" label="需求ID" width="100" />
+      <el-table :data="formatRequirements(customer?.requirements || [])" style="width: 100%">
         <el-table-column prop="content" label="需求内容" />
-        <el-table-column prop="createTime" label="创建时间" width="180" />
       </el-table>
     </el-card>
 
@@ -59,11 +57,8 @@
       <div class="log-header">
         <el-button type="primary" size="small" @click="showLogDialog = true">添加日志</el-button>
       </div>
-      <el-table :data="customer?.followLogs || []" style="width: 100%">
-        <el-table-column prop="id" label="日志ID" width="100" />
+      <el-table :data="formatFollowLogs(customer?.followLogs || [])" style="width: 100%">
         <el-table-column prop="content" label="日志内容" />
-        <el-table-column prop="creator" label="创建人" width="100" />
-        <el-table-column prop="createTime" label="创建时间" width="180" />
       </el-table>
     </el-card>
 
@@ -143,30 +138,8 @@ const fetchCustomerDetail = async () => {
     } else {
       ElMessage.error('获取客户详情失败，请检查网络连接')
       
-      // 如果后端接口不可用，使用mock数据
-      customer.value = {
-        id: id,
-        customerId: 'C001',
-        cid: 'CID001',
-        name: '测试客户',
-        contact: '13800138000',
-        source: '线上',
-        createTime: '2024-01-01 10:00:00',
-        owner: '张三',
-        submitter: '李四',
-        status: '待跟进',
-        intentProduct: '产品A',
-        intentLevel: '中',
-        budget: '10000',
-        expectedTime: '2026-02-01',
-        requirements: [
-          { id: '1', content: '需要定制化功能', createTime: '2024-01-01 11:00:00' }
-        ],
-        followLogs: [
-          { id: '1', content: '初次接触，客户表示有兴趣', creator: '张三', createTime: '2024-01-01 10:30:00' }
-        ]
-      }
-      ElMessage.info('使用模拟数据进行展示')
+      // 如果后端接口不可用，将客户详情设为null，不显示任何数据
+      customer.value = null
     }
   } finally {
     loading.value = false
@@ -242,6 +215,34 @@ const getIntentLevelType = (level: string) => {
     default:
       return 'info'
   }
+}
+
+// 格式化需求信息为表格数据
+const formatRequirements = (requirements: string[]) => {
+  return requirements.map((req, index) => ({
+    content: req
+  }))
+}
+
+// 格式化跟进日志为表格数据
+const formatFollowLogs = (logs: string[]) => {
+  return logs.map((log, index) => ({
+    content: log
+  }))
+}
+
+// 格式化日期
+const formatDate = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  }).replace(/\//g, '-')
 }
 
 // 初始化

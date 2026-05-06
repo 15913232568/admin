@@ -7,6 +7,7 @@ import com.example.wealth.dto.LeadUpdateRequest
 import com.example.wealth.dto.PageResponse
 import com.example.wealth.entity.Lead
 import com.example.wealth.repository.LeadRepository
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
@@ -27,15 +28,7 @@ class LeadService(private val leadRepository: LeadRepository) {
      * 创建潜在客户
      */
     fun createLead(request: LeadCreateRequest): LeadResponse {
-        // 检查客户编号是否已存在
-        if (leadRepository.existsByCid(request.cid)) {
-            throw IllegalArgumentException("客户编号已存在: ${request.cid}")
-        }
-        
-        // 检查客户ID是否已存在
-        if (leadRepository.existsByCustomerId(request.customerId)) {
-            throw IllegalArgumentException("客户ID已存在: ${request.customerId}")
-        }
+
         
         val lead = Lead(
             customerId = request.customerId,
@@ -52,11 +45,15 @@ class LeadService(private val leadRepository: LeadRepository) {
             expectedTime = request.expectedTime
         )
         
-        // 设置需求列表
-        lead.setRequirementsList(request.requirements)
+        // 设置需求列表 (List<String>)
+        if (request.requirements.isNotEmpty()) {
+            lead.requirements = jacksonObjectMapper().writeValueAsString(request.requirements)
+        }
         
-        // 设置跟进日志列表
-        lead.setFollowLogsList(request.followLogs)
+        // 设置跟进日志列表 (List<String>)
+        if (request.followLogs.isNotEmpty()) {
+            lead.followLogs = jacksonObjectMapper().writeValueAsString(request.followLogs)
+        }
         
         val savedLead = leadRepository.save(lead)
         return LeadResponse.fromEntity(savedLead)
@@ -102,8 +99,20 @@ class LeadService(private val leadRepository: LeadRepository) {
         request.intentLevel?.let { lead.intentLevel = it }
         request.budget?.let { lead.budget = it }
         request.expectedTime?.let { lead.expectedTime = it }
-        request.requirements?.let { lead.setRequirementsList(it) }
-        request.followLogs?.let { lead.setFollowLogsList(it) }
+        request.requirements?.let { 
+            if (it.isNotEmpty()) {
+                lead.requirements = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().writeValueAsString(it)
+            } else {
+                lead.requirements = null
+            }
+        }
+        request.followLogs?.let { 
+            if (it.isNotEmpty()) {
+                lead.followLogs = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().writeValueAsString(it)
+            } else {
+                lead.followLogs = null
+            }
+        }
         
         lead.updatedAt = java.time.LocalDateTime.now()
         
@@ -186,11 +195,23 @@ class LeadService(private val leadRepository: LeadRepository) {
     /**
      * 添加需求
      */
-    fun addRequirement(id: Long, requirement: Lead.Requirement): LeadResponse {
+    fun addRequirement(id: Long, requirement: String): LeadResponse {
         val lead = leadRepository.findById(id)
             .orElseThrow { IllegalArgumentException("潜在客户不存在: $id") }
         
-        lead.addRequirement(requirement)
+        // 获取现有需求列表
+        val currentRequirements = if (lead.requirements != null) {
+            try {
+                com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().readValue(lead.requirements, Array<String>::class.java).toList()
+            } catch (e: Exception) {
+                emptyList()
+            }
+        } else emptyList()
+        
+        // 添加新需求
+        val updatedRequirements = currentRequirements + requirement
+        lead.requirements = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().writeValueAsString(updatedRequirements)
+        
         lead.updatedAt = java.time.LocalDateTime.now()
         
         val updatedLead = leadRepository.save(lead)
@@ -200,11 +221,37 @@ class LeadService(private val leadRepository: LeadRepository) {
     /**
      * 添加跟进日志
      */
-    fun addFollowLog(id: Long, followLog: Lead.FollowLog): LeadResponse {
+    fun addFollowLog(id: Long, followLog: String): LeadResponse {
         val lead = leadRepository.findById(id)
             .orElseThrow { IllegalArgumentException("潜在客户不存在: $id") }
         
-        lead.addFollowLog(followLog)
+        // 获取现有跟进日志列表
+        val currentLogs = if (lead.followLogs != null) {
+            try {
+                com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().readValue(lead.followLogs, Array<String>::class.java).toList()
+            } catch (e: Exception) {
+                emptyList()
+            }
+        } else emptyList()
+        
+        // 添加新跟进日志
+        val updatedLogs = currentLogs + followLog
+        lead.followLogs = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().writeValueAsString(updatedLogs)
+        
+        lead.updatedAt = java.time.LocalDateTime.now()
+        
+        val updatedLead = leadRepository.save(lead)
+        return LeadResponse.fromEntity(updatedLead)
+    }
+    
+    /**
+     * 将当前登录用户设置为潜在客户的负责人
+     */
+    fun assignOwner(id: Long, ownerName: String): LeadResponse {
+        val lead = leadRepository.findById(id)
+            .orElseThrow { IllegalArgumentException("潜在客户不存在: $id") }
+        
+        lead.owner = ownerName
         lead.updatedAt = java.time.LocalDateTime.now()
         
         val updatedLead = leadRepository.save(lead)

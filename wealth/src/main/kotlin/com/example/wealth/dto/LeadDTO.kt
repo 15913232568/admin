@@ -22,15 +22,15 @@ data class LeadCreateRequest(
     
     val contact: String? = null,
     val source: String? = null,
-    val owner: String? = null,
+    val owner: String = "NA",
     val submitter: String? = null,
     val status: String = "待跟进",
     val intentProduct: String? = null,
     val intentLevel: String = "中",
     val budget: BigDecimal? = null,
     val expectedTime: LocalDate? = null,
-    val requirements: List<Lead.Requirement> = emptyList(),
-    val followLogs: List<Lead.FollowLog> = emptyList()
+    val requirements: List<String> = emptyList(),
+    val followLogs: List<String> = emptyList()
 )
 
 /**
@@ -49,8 +49,8 @@ data class LeadUpdateRequest(
     val intentLevel: String? = null,
     val budget: BigDecimal? = null,
     val expectedTime: LocalDate? = null,
-    val requirements: List<Lead.Requirement>? = null,
-    val followLogs: List<Lead.FollowLog>? = null
+    val requirements: List<String>? = null,
+    val followLogs: List<String>? = null
 )
 
 /**
@@ -70,8 +70,8 @@ data class LeadResponse(
     val intentLevel: String,
     val budget: BigDecimal?,
     val expectedTime: LocalDate?,
-    val requirements: List<Lead.Requirement>,
-    val followLogs: List<Lead.FollowLog>,
+    val requirements: List<String>,
+    val followLogs: List<String>,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime
 ) {
@@ -94,8 +94,20 @@ data class LeadResponse(
                 intentLevel = lead.intentLevel,
                 budget = lead.budget,
                 expectedTime = lead.expectedTime,
-                requirements = lead.getRequirementsList(),
-                followLogs = lead.getFollowLogsList(),
+                requirements = if (lead.requirements != null) {
+                    try {
+                        com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().readValue(lead.requirements, Array<String>::class.java).toList()
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                } else emptyList(),
+                followLogs = if (lead.followLogs != null) {
+                    try {
+                        com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().readValue(lead.followLogs, Array<String>::class.java).toList()
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                } else emptyList(),
                 createdAt = lead.createdAt,
                 updatedAt = lead.updatedAt
             )

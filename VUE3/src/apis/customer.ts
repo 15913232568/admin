@@ -25,12 +25,12 @@ export const getCustomerList = async (_params: CustomerFilter): Promise<Customer
         budget: '100万',
         expectedTime: '2024-03-01',
         requirements: [
-          { id: '1', content: '需求1', createTime: '2024-01-01 10:00:00' },
-          { id: '2', content: '需求2', createTime: '2024-01-02 10:00:00' }
+          '需求1',
+          '需求2'
         ],
         followLogs: [
-          { id: '1', content: '跟进记录1', creator: '李四', createTime: '2024-01-01 10:00:00' },
-          { id: '2', content: '跟进记录2', creator: '李四', createTime: '2024-01-02 10:00:00' }
+          '跟进记录1',
+          '跟进记录2'
         ]
       },
       {
@@ -50,10 +50,10 @@ export const getCustomerList = async (_params: CustomerFilter): Promise<Customer
         budget: '50万',
         expectedTime: '2024-04-01',
         requirements: [
-          { id: '3', content: '需求3', createTime: '2024-01-02 10:00:00' }
+          '需求3'
         ],
         followLogs: [
-          { id: '3', content: '跟进记录3', creator: '张三', createTime: '2024-01-02 10:00:00' }
+          '跟进记录3'
         ]
       }
     ],
@@ -84,12 +84,12 @@ export const getCustomerDetail = async (id: string): Promise<CustomerDetailRespo
       budget: '100万',
       expectedTime: '2024-03-01',
       requirements: [
-        { id: '1', content: '需求1', createTime: '2024-01-01 10:00:00' },
-        { id: '2', content: '需求2', createTime: '2024-01-02 10:00:00' }
+        '需求1',
+        '需求2'
       ],
       followLogs: [
-        { id: '1', content: '跟进记录1', creator: '李四', createTime: '2024-01-01 10:00:00' },
-        { id: '2', content: '跟进记录2', creator: '李四', createTime: '2024-01-02 10:00:00' }
+        '跟进记录1',
+        '跟进记录2'
       ]
     }
   }

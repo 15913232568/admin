@@ -18,20 +18,20 @@
 
     <!-- 基础信息 -->
     <el-card class="info-card" header="基础信息">
-      <el-form :model="customerForm" label-width="100px">
+      <el-form :model="customerForm" label-width="100px" :rules="rules" ref="formRef">
         <el-row :gutter="20">
           <el-col :span="8">
-            <el-form-item label="客户ID">
+            <el-form-item label="客户ID" prop="customerId">
               <el-input v-model="customerForm.customerId" placeholder="请输入客户ID" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="CID">
+            <el-form-item label="CID" prop="cid">
               <el-input v-model="customerForm.cid" placeholder="请输入CID" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="客户名称">
+            <el-form-item label="客户名称" prop="name">
               <el-input v-model="customerForm.name" placeholder="请输入客户名称" />
             </el-form-item>
           </el-col>
@@ -130,9 +130,9 @@
         <el-button type="primary" size="small" @click="handleAddRequirement">添加需求</el-button>
       </div>
       <el-table :data="customerForm.requirements" style="width: 100%">
-        <el-table-column prop="content" label="需求内容">
+        <el-table-column label="需求内容">
           <template #default="scope">
-            <el-input v-model="scope.row.content" placeholder="请输入需求内容" />
+            <el-input v-model="customerForm.requirements[scope.$index]" placeholder="请输入需求内容" />
           </template>
         </el-table-column>
         <el-table-column label="操作" width="100">
@@ -149,9 +149,9 @@
         <el-button type="primary" size="small" @click="showLogDialog = true">添加日志</el-button>
       </div>
       <el-table :data="customerForm.followLogs" style="width: 100%">
-        <el-table-column prop="content" label="日志内容">
+        <el-table-column label="日志内容">
           <template #default="scope">
-            <el-input v-model="scope.row.content" placeholder="请输入日志内容" />
+            <el-input v-model="customerForm.followLogs[scope.$index]" placeholder="请输入日志内容" />
           </template>
         </el-table-column>
         <el-table-column label="操作" width="100">
@@ -224,8 +224,24 @@ const emit = defineEmits([
   'approve'
 ])
 
+// 表单引用
+const formRef = ref()
+
 // 客户表单
 const customerForm = reactive({ ...props.customerData })
+
+// 验证规则
+const rules = {
+  customerId: [
+    { required: true, message: '客户ID不能为空', trigger: 'blur' }
+  ],
+  cid: [
+    { required: true, message: '客户编号不能为空', trigger: 'blur' }
+  ],
+  name: [
+    { required: true, message: '客户姓名不能为空', trigger: 'blur' }
+  ]
+}
 
 // 监听customerData变化
 watch(() => props.customerData, (newVal) => {
@@ -239,13 +255,27 @@ const logForm = reactive({
 })
 
 // 处理保存
-const handleSave = () => {
-  emit('save', customerForm)
+const handleSave = async () => {
+  if (formRef.value) {
+    await formRef.value.validate(async (valid: boolean) => {
+      if (valid) {
+        // 验证通过，提交数据
+        emit('save', customerForm)
+      }
+    })
+  }
 }
 
 // 处理提交
-const handleSubmit = () => {
-  emit('submit', customerForm)
+const handleSubmit = async () => {
+  if (formRef.value) {
+    await formRef.value.validate(async (valid: boolean) => {
+      if (valid) {
+        // 验证通过，提交数据
+        emit('submit', customerForm)
+      }
+    })
+  }
 }
 
 // 处理取消
@@ -268,13 +298,11 @@ const handleApprove = () => {
   emit('approve')
 }
 
+
+
 // 添加需求
 const handleAddRequirement = () => {
-  customerForm.requirements.push({
-    id: Date.now().toString(),
-    content: '',
-    createTime: new Date().toLocaleString()
-  })
+  customerForm.requirements.push('')
 }
 
 // 删除需求
@@ -285,12 +313,7 @@ const handleRemoveRequirement = (index: number) => {
 // 添加日志
 const handleAddLog = () => {
   if (logForm.content.trim()) {
-    customerForm.followLogs.push({
-      id: Date.now().toString(),
-      content: logForm.content,
-      creator: '当前用户',
-      createTime: new Date().toLocaleString()
-    })
+    customerForm.followLogs.push(logForm.content)
     logForm.content = ''
     showLogDialog.value = false
   }

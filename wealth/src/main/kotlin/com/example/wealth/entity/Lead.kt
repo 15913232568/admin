@@ -68,36 +68,14 @@ class Lead(
 ) {
     
     /**
-     * 需求信息数据类
-     */
-    data class Requirement(
-        val id: String,
-        val type: String,
-        val description: String,
-        val priority: String = "中",
-        val createdAt: LocalDateTime = LocalDateTime.now()
-    )
-    
-    /**
-     * 跟进日志数据类
-     */
-    data class FollowLog(
-        val id: String,
-        val content: String,
-        val operator: String,
-        val nextFollowTime: LocalDate? = null,
-        val createdAt: LocalDateTime = LocalDateTime.now()
-    )
-    
-    /**
      * 获取需求列表
      */
-    fun getRequirementsList(): List<Requirement> {
+    fun getRequirementsList(): List<String> {
         return if (requirements.isNullOrBlank()) {
             emptyList()
         } else {
             try {
-                jacksonObjectMapper().readValue(requirements, Array<Requirement>::class.java).toList()
+                jacksonObjectMapper().readValue(requirements, Array<String>::class.java).toList()
             } catch (e: Exception) {
                 emptyList()
             }
@@ -107,7 +85,7 @@ class Lead(
     /**
      * 设置需求列表
      */
-    fun setRequirementsList(requirementsList: List<Requirement>) {
+    fun setRequirementsList(requirementsList: List<String>) {
         this.requirements = if (requirementsList.isEmpty()) {
             null
         } else {
@@ -118,12 +96,12 @@ class Lead(
     /**
      * 获取跟进日志列表
      */
-    fun getFollowLogsList(): List<FollowLog> {
+    fun getFollowLogsList(): List<String> {
         return if (followLogs.isNullOrBlank()) {
             emptyList()
         } else {
             try {
-                jacksonObjectMapper().readValue(followLogs, Array<FollowLog>::class.java).toList()
+                jacksonObjectMapper().readValue(followLogs, Array<String>::class.java).toList()
             } catch (e: Exception) {
                 emptyList()
             }
@@ -133,7 +111,7 @@ class Lead(
     /**
      * 设置跟进日志列表
      */
-    fun setFollowLogsList(followLogsList: List<FollowLog>) {
+    fun setFollowLogsList(followLogsList: List<String>) {
         this.followLogs = if (followLogsList.isEmpty()) {
             null
         } else {
@@ -144,7 +122,7 @@ class Lead(
     /**
      * 添加需求
      */
-    fun addRequirement(requirement: Requirement) {
+    fun addRequirement(requirement: String) {
         val currentRequirements = getRequirementsList().toMutableList()
         currentRequirements.add(requirement)
         setRequirementsList(currentRequirements)
@@ -153,7 +131,7 @@ class Lead(
     /**
      * 添加跟进日志
      */
-    fun addFollowLog(followLog: FollowLog) {
+    fun addFollowLog(followLog: String) {
         val currentLogs = getFollowLogsList().toMutableList()
         currentLogs.add(followLog)
         setFollowLogsList(currentLogs)
